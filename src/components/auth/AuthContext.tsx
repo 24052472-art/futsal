@@ -177,38 +177,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const loginWithGoogle = async (requestedPlan?: string) => {
-    const triggerRedirect = async () => {
-      if (requestedPlan) {
-        sessionStorage.setItem("gh_pending_plan", requestedPlan);
-        sessionStorage.setItem("gh_redirect_after_login", `/checkout?plan=${requestedPlan}`);
-      }
-      await signInWithRedirect(auth, googleProvider);
-    };
+    setLoading(true);
+    
+    // Store intentions before trying login
+    if (requestedPlan) {
+      sessionStorage.setItem("gh_pending_plan", requestedPlan);
+      sessionStorage.setItem("gh_redirect_after_login", `/checkout?plan=${requestedPlan}`);
+    }
 
     try {
-      if (isMobileDevice()) {
-        return await triggerRedirect();
-      }
-
-      try {
-        const result = await signInWithPopup(auth, googleProvider);
-        await setupUserDoc(result.user, requestedPlan, setRole, setPlan, setPaymentStatus, setProofUrl);
-      } catch (popupError: any) {
-        if (
-          popupError.code === "auth/popup-blocked" || 
-          popupError.code === "auth/cancelled-popup-request" ||
-          popupError.code === "auth/internal-error" ||
-          popupError.code === "auth/network-request-failed"
-        ) {
-          console.warn("Popup blocked or failed, using redirect...");
-          return await triggerRedirect();
-        }
-        throw popupError;
+      // Try Popup first (Safari/iOS works better with popups triggered by clicks)
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result.user) {
+        const pendingPlan = sessionStorage.getItem("gh_pending_plan") || undefined;
+        sessionStorage.removeItem("gh_pending_plan");
+        await setupUserDoc(result.user, pendingPlan, setRole, setPlan, setPaymentStatus, setProofUrl);
+        
+        const redirectPath = sessionStorage.getItem("gh_redirect_after_login") || "/dashboard";
+        sessionStorage.removeItem("gh_redirect_after_login");
+        window.location.href = redirectPath;
       }
     } catch (error: any) {
-      if (error.code === "auth/popup-closed-by-user") return;
-      console.error("Google Login Error:", error);
-      alert("Login attempt failed. Please try again or check your internet connection.");
+      console.error("Login Error:", error);
+      
+      // If popup is blocked, use redirect as last resort
+      if (error.code === "auth/popup-blocked" || error.code === "auth/cancelled-popup-request") {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+        } catch (redirectErr) {
+          alert("Login failed. Please disable popup blockers or try another browser.");
+        }
+      } else {
+        alert(`Login failed: ${error.code}. Please check your internet.`);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
