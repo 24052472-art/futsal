@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Zap, Check, CreditCard, Landmark, ArrowRight, MessageCircle, Mail, ShieldCheck, Loader2, Upload, X } from "lucide-react";
+import { Zap, Check, CreditCard, Landmark, ArrowRight, MessageCircle, Mail, ShieldCheck, Loader2, Upload, X, Globe } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthContext";
 import { doc, updateDoc, serverTimestamp, query, collection, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -16,13 +16,26 @@ const plans = {
 function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, plan, plan: authPlan } = useAuth();
-  const selectedPlanId = searchParams.get("plan") || authPlan || "starter";
-  const currentPlan = plans[selectedPlanId as keyof typeof plans] || plans.starter;
+  const { user, plan: authPlan, loading: authLoading } = useAuth();
+  
+  // Hydration safety: use local state for plan to avoid mismatch
+  const [selectedPlanId, setSelectedPlanId] = useState<string>("pro");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const p = searchParams.get("plan");
+    if (p && plans[p as keyof typeof plans]) {
+      setSelectedPlanId(p);
+    } else if (authPlan && plans[authPlan as keyof typeof plans]) {
+      setSelectedPlanId(authPlan);
+    }
+  }, [searchParams, authPlan]);
+
+  const currentPlan = plans[selectedPlanId as keyof typeof plans] || plans.pro;
 
   const [method, setMethod] = useState<"esewa" | "khalti" | "bank">("esewa");
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [superAdmin, setSuperAdmin] = useState<any>(null);
@@ -57,7 +70,7 @@ function CheckoutContent() {
       alert("Please upload your payment screenshot first.");
       return;
     }
-    setLoading(true);
+    setSubmitting(true);
     try {
       if (user) {
         await updateDoc(doc(db, "users", user.uid), {
@@ -67,49 +80,42 @@ function CheckoutContent() {
           proofUrl: preview, 
           submittedAt: serverTimestamp()
         });
+        alert("Payment screenshot submitted! Your dashboard will be activated once verified.");
+        router.push("/dashboard"); 
+      } else {
+        alert("Session expired. Please log in again.");
+        router.push("/login");
       }
-      alert("Payment screenshot submitted! Your dashboard will be activated once the Super Admin verifies the transaction.");
-      router.push("/dashboard"); 
     } catch (err) {
       console.error(err);
       alert("Error submitting payment proof.");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  if (success) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "var(--background)", padding: 24 }}>
-        <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(16,185,129,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
-          <Check size={40} color="#10b981" />
-        </div>
-        <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: 32, fontWeight: 800, marginBottom: 8 }}>Activation Successful!</h1>
-        <p style={{ color: "var(--text-muted)", marginBottom: 32 }}>Your arena is now live. Redirecting...</p>
-        <Loader2 className="animate-spin" size={24} color="#00d4ff" />
-      </div>
-    );
-  }
+  if (!mounted) return null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--background)", padding: "40px 24px", position: "relative" }}>
-       <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(0,212,255,0.1) 0%, transparent 70%)" }} />
+    <div style={{ minHeight: "100vh", background: "var(--surface)", padding: "clamp(20px, 5vw, 60px) 20px", position: "relative", overflowX: "hidden" }}>
+       <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(0,212,255,0.1) 0%, transparent 70%)", pointerEvents: "none" }} />
       
-      <div style={{ maxWidth: 900, margin: "0 auto", position: "relative" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #00d4ff, #00ff88)", display: "flex", alignItems: "center", justifyContent: "center", color: "#020617", fontWeight: 900, fontSize: 18, fontFamily: "sans-serif", letterSpacing: "-1px" }}>
+      <div style={{ maxWidth: 1000, margin: "0 auto", position: "relative", zIndex: 1 }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 20, textDecoration: "none", color: "inherit" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #00d4ff, #00ff88)", display: "flex", alignItems: "center", justifyContent: "center", color: "#020617", fontWeight: 900, fontSize: 18 }}>
               GH
             </div>
-            <span style={{ fontSize: 20, fontWeight: 900 }}>Game<span style={{ color: "#00ff88" }}>Haru</span> Activation</span>
-          </div>
-          <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 800, letterSpacing: "-1px" }}>
+            <span style={{ fontSize: 20, fontWeight: 900 }}>Game<span style={{ color: "#00ff88" }}>Haru</span></span>
+          </Link>
+          <h1 style={{ fontSize: "clamp(24px, 5vw, 40px)", fontWeight: 800, letterSpacing: "-1px" }}>
             Secure your <span className="gradient-text">{currentPlan.name}</span> access
           </h1>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 32 }}>
-          <div className="glass" style={{ padding: 32, borderRadius: 24, height: "fit-content" }}>
+        <div className="grid-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "clamp(20px, 4vw, 40px)" }}>
+          {/* Summary */}
+          <div className="glass" style={{ padding: "clamp(20px, 4vw, 32px)", borderRadius: 24, height: "fit-content" }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>Order Summary</h2>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
               <span style={{ color: "var(--text-secondary)" }}>{currentPlan.name} Plan</span>
@@ -132,17 +138,14 @@ function CheckoutContent() {
             </div>
           </div>
 
-          <div className="glass" style={{ padding: 32, borderRadius: 24 }}>
+          {/* Payment */}
+          <div className="glass" style={{ padding: "clamp(20px, 4vw, 32px)", borderRadius: 24 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>Choose Payment Channel</h2>
             
             <div style={{ display: "flex", gap: 8, marginBottom: 24, background: "rgba(0,0,0,0.2)", padding: 4, borderRadius: 12 }}>
-              {[
-                { id: "esewa", label: "eSewa" },
-                { id: "khalti", label: "Khalti" },
-                { id: "bank", label: "Bank" }
-              ].map(m => (
-                <button key={m.id} onClick={() => setMethod(m.id as any)} style={{ flex: 1, padding: "12px", borderRadius: 8, border: "none", fontSize: 13, fontWeight: 800, cursor: "pointer", background: method === m.id ? "linear-gradient(135deg, #00d4ff, #00ff88)" : "transparent", color: method === m.id ? "#020617" : "var(--text-secondary)", transition: "0.2s" }}>
-                   {m.label}
+              {["esewa", "khalti", "bank"].map(m => (
+                <button key={m} onClick={() => setMethod(m as any)} style={{ flex: 1, padding: "12px 8px", borderRadius: 8, border: "none", fontSize: 13, fontWeight: 800, cursor: "pointer", background: method === m ? "linear-gradient(135deg, #00d4ff, #00ff88)" : "transparent", color: method === m ? "#020617" : "var(--text-secondary)", transition: "0.2s" }}>
+                   {m.charAt(0).toUpperCase() + m.slice(1)}
                 </button>
               ))}
             </div>
@@ -159,43 +162,43 @@ function CheckoutContent() {
               ) : (
                 <div style={{ background: "rgba(15,23,42,0.6)", borderRadius: 16, padding: 20, border: "1px solid var(--border)", marginBottom: 24, textAlign: "center" }}>
                    <div style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 12 }}>Scan to Pay via {method === "esewa" ? "eSewa" : "Khalti"}:</div>
-                   <div style={{ width: 160, height: 160, background: "white", margin: "0 auto", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", border: "1px solid var(--border)", overflow: "hidden" }}>
+                   <div style={{ width: 140, height: 140, background: "white", margin: "0 auto", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border)", overflow: "hidden" }}>
                       {(method === "esewa" && superAdmin?.qrEsewa) || (method === "khalti" && superAdmin?.qrKhalti) ? (
-                        <img src={method === "esewa" ? superAdmin.qrEsewa : superAdmin.qrKhalti} alt={`${method} QR`} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                        <img src={method === "esewa" ? superAdmin.qrEsewa : superAdmin.qrKhalti} alt="QR" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                       ) : (
-                        <span style={{ fontSize: 11, fontWeight: 600 }}>Super Admin<br/>{method.toUpperCase()} QR</span>
+                        <span style={{ fontSize: 10, color: "#64748b", fontWeight: 600 }}>QR Code<br/>Coming Soon</span>
                       )}
                    </div>
                 </div>
               )}
 
               <div style={{ marginBottom: 24 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Upload Payment Screenshot</label>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Upload Payment Screenshot</label>
                 {!preview ? (
-                  <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 120, border: "2px dashed var(--border)", borderRadius: 16, cursor: "pointer", gap: 10, transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.borderColor = "#00d4ff"}>
+                  <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 120, border: "2px dashed var(--border)", borderRadius: 16, cursor: "pointer", gap: 10 }}>
                     <Upload size={24} color="var(--text-muted)" />
-                    <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Click to upload screenshot</span>
+                    <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Tap to upload screenshot</span>
                     <input type="file" hidden accept="image/*" onChange={handleFileChange} />
                   </label>
                 ) : (
                   <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", height: 160, border: "1px solid var(--border)" }}>
                      <img src={preview} alt="Proof" style={{ width: "100%", height: "100%", objectFit: "contain", background: "black" }} />
-                     <button onClick={() => {setPreview(null); setFile(null);}} style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.5)", border: "none", color: "white", padding: 5, borderRadius: "50%", cursor: "pointer" }}>
+                     <button onClick={() => {setPreview(null); setFile(null);}} style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.5)", border: "none", color: "white", padding: 5, borderRadius: "50%" }}>
                        <X size={14} />
                      </button>
                   </div>
                 )}
               </div>
 
-              <button onClick={handleManualSubmit} disabled={loading || !file} className="btn-primary" style={{ width: "100%", padding: "14px", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                 {loading ? <Loader2 className="animate-spin" size={20} /> : "Submit Proof for Approval"}
+              <button onClick={handleManualSubmit} disabled={submitting || !file} className="btn-primary" style={{ width: "100%", padding: 16, fontSize: 15, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, opacity: submitting || !file ? 0.6 : 1 }}>
+                 {submitting ? <Loader2 className="animate-spin" size={20} /> : "Submit Proof for Approval"}
               </button>
             </div>
 
             <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid var(--border)", textAlign: "center" }}>
               <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16 }}>Need assistance?</div>
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16 }}>
-                <a href="https://wa.me/9779829098384" target="_blank" style={{ display: "flex", alignItems: "center", gap: 8, color: "#00ff88", textDecoration: "none", fontSize: 13, fontWeight: 600 }}><MessageCircle size={16} /> WhatsApp</a>
+                <a href="https://wa.me/9779829098384" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: "#00ff88", textDecoration: "none", fontSize: 13, fontWeight: 600 }}><MessageCircle size={16} /> WhatsApp</a>
                 <a href="mailto:abhi.kush047@gmail.com" style={{ display: "flex", alignItems: "center", gap: 8, color: "#00d4ff", textDecoration: "none", fontSize: 13, fontWeight: 600 }}><Mail size={16} /> Email</a>
               </div>
             </div>
@@ -209,7 +212,7 @@ function CheckoutContent() {
 export default function CheckoutPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f172a" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#020617" }}>
         <Loader2 className="animate-spin" size={32} color="#00d4ff" />
       </div>
     }>
