@@ -59,8 +59,34 @@ function CheckoutContent() {
     if (e.target.files && e.target.files[0]) {
       const f = e.target.files[0];
       setFile(f);
+      
       const reader = new FileReader();
-      reader.onload = () => setPreview(reader.result as string);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          // Compress image to fit Firestore limits
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const max = 800; // Max dimension
+          
+          if (width > height && width > max) {
+            height *= max / width;
+            width = max;
+          } else if (height > max) {
+            width *= max / height;
+            height = max;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.7);
+          setPreview(compressed);
+        };
+        img.src = event.target?.result as string;
+      };
       reader.readAsDataURL(f);
     }
   };
