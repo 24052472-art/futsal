@@ -115,12 +115,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
+  // Mobile Redirect Watcher: Forces the page forward if we get stuck
+  useEffect(() => {
+    const checkSession = setInterval(() => {
+      if (user && !loading) {
+        const path = window.location.pathname;
+        if (path === "/login" || path === "/register") {
+          const redirectPath = sessionStorage.getItem("gh_redirect_after_login") || "/dashboard";
+          console.log("Stuck session detected, forcing redirect to:", redirectPath);
+          window.location.href = redirectPath;
+        }
+      }
+    }, 2000); // Check every 2 seconds
+    return () => clearInterval(checkSession);
+  }, [user, loading]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
       if (user) {
-        // Fallback for mobile: If getRedirectResult failed but user is logged in
-        // and we are stuck on a login/register page, move forward.
+        setUser(user);
+        
+        // Handle post-login redirect immediately if on login/register
         const path = window.location.pathname;
         if (path === "/login" || path === "/register") {
           const redirectPath = sessionStorage.getItem("gh_redirect_after_login") || "/dashboard";
@@ -147,16 +162,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } catch (err) {
             console.error("Firestore Error:", err);
-            setRole("owner");
-            setPlan("starter");
-            setPaymentStatus("unpaid");
           }
         }
       } else {
+        setUser(null);
         setRole(null);
         setPlan(null);
         setPaymentStatus(null);
-        setProofUrl(null);
       }
       setLoading(false);
     });
