@@ -119,6 +119,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
+        // Fallback for mobile: If getRedirectResult failed but user is logged in
+        // and we are stuck on a login/register page, move forward.
+        const path = window.location.pathname;
+        if (path === "/login" || path === "/register") {
+          const redirectPath = sessionStorage.getItem("gh_redirect_after_login") || "/dashboard";
+          window.location.href = redirectPath;
+        }
+
         if (SUPER_ADMIN_EMAILS.includes(user.email || "")) {
           setRole("admin");
           setPlan("enterprise"); 
