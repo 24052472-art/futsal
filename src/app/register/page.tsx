@@ -19,11 +19,14 @@ function RegisterContent() {
   const [selectedPlan, setSelectedPlan] = useState(searchParams.get("plan") || "pro");
   const [loading, setLoading] = useState(false);
 
+  // Redirect handled by AuthContext post-login flow
+  /*
   useEffect(() => {
     if (user) {
       router.push("/dashboard");
     }
   }, [user, router]);
+  */
 
   const handleGoogleRegister = async () => {
     setLoading(true);

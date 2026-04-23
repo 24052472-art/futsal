@@ -93,19 +93,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (result?.user) {
         const pendingPlan = sessionStorage.getItem("gh_pending_plan") || undefined;
         sessionStorage.removeItem("gh_pending_plan");
+        
         await setupUserDoc(result.user, pendingPlan, setRole, setPlan, setPaymentStatus, setProofUrl);
         
-        // Handle checkout redirection if needed
+        // Priority 1: Check if there's a specific redirect (like /checkout)
         const redirectPath = sessionStorage.getItem("gh_redirect_after_login");
         if (redirectPath) {
           sessionStorage.removeItem("gh_redirect_after_login");
-          router.push(redirectPath);
+          window.location.href = redirectPath;
+          return;
+        }
+
+        // Priority 2: If we're on login/register pages, go to dashboard
+        const path = window.location.pathname;
+        if (path === "/login" || path === "/register") {
+          window.location.href = "/dashboard";
         }
       }
     }).catch((err) => {
       console.error("Redirect login error:", err);
     });
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
