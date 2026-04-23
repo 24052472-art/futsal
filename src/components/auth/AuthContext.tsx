@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User, signOut, signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider, db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
@@ -17,17 +18,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Super Admin Emails - Hardcoded for MVP, can be moved to env or DB later
 const SUPER_ADMIN_EMAILS = ["abhi.kush047@gmail.com"];
 
-// Detect mobile/tablet where popups are blocked
 const isMobileDevice = () => {
   if (typeof window === "undefined") return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
-    || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent) || window.innerWidth < 800;
 };
 
-// Setup user doc in Firestore after login (shared between popup and redirect)
 const setupUserDoc = async (
   user: User, 
   requestedPlan: string | undefined,
@@ -83,6 +80,7 @@ const setupUserDoc = async (
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<"admin" | "owner" | "customer" | null>(null);
   const [plan, setPlan] = useState<"starter" | "pro" | "enterprise" | null>(null);
@@ -90,19 +88,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Handle redirect result (for mobile login)
   useEffect(() => {
     getRedirectResult(auth).then(async (result) => {
       if (result?.user) {
-        // Recover the requested plan from sessionStorage
         const pendingPlan = sessionStorage.getItem("gh_pending_plan") || undefined;
         sessionStorage.removeItem("gh_pending_plan");
         await setupUserDoc(result.user, pendingPlan, setRole, setPlan, setPaymentStatus, setProofUrl);
+        
+        // Handle checkout redirection if needed
+        const redirectPath = sessionStorage.getItem("gh_redirect_after_login");
+        if (redirectPath) {
+          sessionStorage.removeItem("gh_redirect_after_login");
+          router.push(redirectPath);
+        }
       }
     }).catch((err) => {
       console.error("Redirect login error:", err);
     });
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -146,27 +149,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const loginWithGoogle = async (requestedPlan?: string) => {
+    const triggerRedirect = async () => {
+      if (requestedPlan) {
+        sessionStorage.setItem("gh_pending_plan", requestedPlan);
+        sessionStorage.setItem("gh_redirect_after_login", `/checkout?plan=${requestedPlan}`);
+      }
+      await signInWithRedirect(auth, googleProvider);
+    };
+
     try {
       if (isMobileDevice()) {
-        // Mobile: use redirect (popups are blocked on iOS Safari, mobile Chrome, etc.)
-        if (requestedPlan) {
-          sessionStorage.setItem("gh_pending_plan", requestedPlan);
-        }
-        await signInWithRedirect(auth, googleProvider);
-        // Page will redirect away, so nothing runs after this
-        return;
+        return await triggerRedirect();
       }
 
-      // Desktop: use popup (faster UX)
-      const result = await signInWithPopup(auth, googleProvider);
-      await setupUserDoc(result.user, requestedPlan, setRole, setPlan, setPaymentStatus, setProofUrl);
-    } catch (error: any) {
-      if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") {
-        console.warn("User closed or cancelled the login popup.");
-        return; 
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        await setupUserDoc(result.user, requestedPlan, setRole, setPlan, setPaymentStatus, setProofUrl);
+      } catch (popupError: any) {
+        if (
+          popupError.code === "auth/popup-blocked" || 
+          popupError.code === "auth/cancelled-popup-request" ||
+          popupError.code === "auth/internal-error" ||
+          popupError.code === "auth/network-request-failed"
+        ) {
+          console.warn("Popup blocked or failed, using redirect...");
+          return await triggerRedirect();
+        }
+        throw popupError;
       }
+    } catch (error: any) {
+      if (error.code === "auth/popup-closed-by-user") return;
       console.error("Google Login Error:", error);
-      throw error;
+      alert("Login attempt failed. Please try again or check your internet connection.");
     }
   };
 
