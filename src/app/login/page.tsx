@@ -45,7 +45,7 @@ export default function LoginPage() {
           <p style={{ color: "var(--text-muted)", fontSize: 15 }}>Sign in to your arena dashboard</p>
         </div>
 
-        <div className="glass" style={{ borderRadius: 28, padding: "48px 40px", border: "1px solid var(--border)", boxShadow: "0 20px 50px -12px rgba(0,0,0,0.5)" }}>
+        <div className="glass" style={{ borderRadius: 28, padding: "clamp(24px, 5vw, 48px) clamp(20px, 4vw, 40px)", border: "1px solid var(--border)", boxShadow: "0 20px 50px -12px rgba(0,0,0,0.5)" }}>
           
           <button type="button" onClick={handleGoogleLogin} className="btn-primary" style={{ 
             width: "100%", padding: "16px", fontSize: 16, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 12,

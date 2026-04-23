@@ -69,9 +69,16 @@ export default function ArenaPage({ params: paramsPromise }: { params: Promise<{
           targetOwnerId = ownerSnap.docs[0].id;
           setOwnerData({ ...oData, uid: targetOwnerId });
         } else {
-          // Fallback: If no slug matches, try finding the owner by name or just use a default for testing
-          // For now, let's look for any category that might belong to this slug (legacy)
-          console.warn("No owner found for slug:", slug);
+          // Fallback: slug might be a raw UID (for owners who haven't set a custom slug)
+          try {
+            const uidDoc = await getDoc(doc(db, "users", slug));
+            if (uidDoc.exists()) {
+              targetOwnerId = slug;
+              setOwnerData({ ...uidDoc.data(), uid: slug });
+            } else {
+              console.warn("No owner found for slug:", slug);
+            }
+          } catch { console.warn("No owner found for slug:", slug); }
         }
 
         // 2. Fetch categories specifically for this owner

@@ -124,8 +124,8 @@ export default function BookingsPage() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: selected ? "1fr 420px" : "1fr", gap: 32, alignItems: "start" }}>
-        <div style={{ minWidth: 0 }}>
+      <div className="responsive-flex" style={{ display: "flex", gap: 32, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           {/* Controls */}
           <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
              <div style={{ position: "relative", flex: 1, minWidth: 300 }}>

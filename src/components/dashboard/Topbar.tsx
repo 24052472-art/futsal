@@ -2,11 +2,29 @@
 import { Bell, Search, ExternalLink, Calendar, ShieldCheck, Crown, Menu } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function DashboardTopbar({ onMenuClick }: { onMenuClick: () => void }) {
   const { user, role, plan, paymentStatus } = useAuth();
   const [showPlan, setShowPlan] = useState(false);
+  const [arenaSlug, setArenaSlug] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchSlug = async () => {
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) {
+          setArenaSlug(snap.data().arenaSlug || user.uid);
+        } else {
+          setArenaSlug(user.uid);
+        }
+      } catch { setArenaSlug(user.uid); }
+    };
+    fetchSlug();
+  }, [user]);
 
   // Map the plan ID to a display name
   const planDisplay = {
@@ -34,7 +52,7 @@ export default function DashboardTopbar({ onMenuClick }: { onMenuClick: () => vo
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <Link href="/arena/green-turf-kathmandu" target="_blank" className="hide-mobile" style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text-secondary)", textDecoration: "none", fontSize: 13, fontWeight: 500, transition: "all 0.2s" }}
+        <Link href={`/arena/${arenaSlug}`} target="_blank" className="hide-mobile" style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text-secondary)", textDecoration: "none", fontSize: 13, fontWeight: 500, transition: "all 0.2s" }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "#00d4ff"; (e.currentTarget as HTMLElement).style.color = "#00d4ff"; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}>
           <ExternalLink size={13} /> <span className="hide-tablet">View Arena Page</span>

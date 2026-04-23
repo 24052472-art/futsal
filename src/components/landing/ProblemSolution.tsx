@@ -32,7 +32,7 @@ export default function ProblemSolution() {
           </h2>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 1fr", gap: 32, alignItems: "start" }}>
+        <div className="grid-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 80px 1fr", gap: 32, alignItems: "start" }}>
           {/* Problems */}
           <div className="glass" style={{ borderRadius: 20, padding: 32, border: "1px solid rgba(239,68,68,0.2)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
@@ -55,7 +55,7 @@ export default function ProblemSolution() {
           </div>
 
           {/* Arrow */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+          <div className="hide-mobile" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
             <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 40, fontWeight: 900 }} className="gradient-text">→</div>
           </div>
 

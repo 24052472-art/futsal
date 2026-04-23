@@ -32,7 +32,7 @@ export default function Navbar() {
           <span style={{ fontFamily: "Outfit,sans-serif", fontWeight: 800, fontSize: 22, color: "white", letterSpacing: "-0.5px" }}>Game<span style={{ color: "#00ff88" }}>Haru</span></span>
         </Link>
 
-        <div style={{ display: "flex", gap: 32, alignItems: "center" }} className="nav-links">
+        <div className="hide-mobile" style={{ display: "flex", gap: 32, alignItems: "center" }}>
           {["Features", "Pricing", "How It Works"].map(item => (
             <a key={item} href={`#${item.toLowerCase().replace(/ /g, "-")}`}
               style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: 15, fontWeight: 500, transition: "color 0.2s" }}
@@ -42,7 +42,7 @@ export default function Navbar() {
           ))}
         </div>
 
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div className="hide-mobile" style={{ display: "flex", gap: 12, alignItems: "center" }}>
           {user ? (
             <Link href="/dashboard" className="btn-primary" style={{ padding: "10px 22px", fontSize: 15, borderRadius: 10, textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
               <LayoutDashboard size={18} /> Dashboard
@@ -55,10 +55,10 @@ export default function Navbar() {
               </Link>
             </>
           )}
-          <button onClick={() => setOpen(!open)} style={{ display: "none", background: "none", border: "none", color: "white", cursor: "pointer" }} className="menu-btn">
-            {open ? <X size={22} /> : <Menu size={22} />}
-          </button>
         </div>
+        <button className="show-mobile" onClick={() => setOpen(!open)} style={{ display: "none", background: "none", border: "none", color: "white", cursor: "pointer" }}>
+          {open ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
 
       {open && (

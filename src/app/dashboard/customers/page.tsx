@@ -120,7 +120,7 @@ export default function CustomersPage() {
           value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))", gap: 24 }}>
         {filtered.map(c => (
           <div key={c.id} className="glass" style={{ borderRadius: 28, padding: 32, border: "1px solid var(--border)", position: "relative" }}>
              {/* Header */}

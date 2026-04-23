@@ -31,7 +31,7 @@ export default function Hero() {
       <div style={{ position: "absolute", bottom: "10%", left: "-5%", width: 350, height: 350, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,212,255,0.1) 0%, transparent 70%)" }} />
 
       <div className="container-pad" style={{ position: "relative", zIndex: 1, width: "100%", padding: "80px 24px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
+        <div className="grid-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
           {/* Left */}
           <div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(0,255,136,0.1)", border: "1px solid rgba(0,255,136,0.3)", borderRadius: 100, padding: "6px 16px", marginBottom: 24 }}>
@@ -68,7 +68,7 @@ export default function Hero() {
           </div>
 
           {/* Right — Dashboard Preview */}
-          <div style={{ position: "relative" }} className="animate-float">
+          <div className="hide-mobile animate-float" style={{ position: "relative" }}>
             <div className="glass gradient-border" style={{ borderRadius: 20, padding: 24, boxShadow: "0 40px 80px rgba(0,0,0,0.5)" }}>
               {/* Mini top bar */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>

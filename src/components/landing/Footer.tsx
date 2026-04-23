@@ -94,7 +94,10 @@ export default function Footer() {
         </div>
       </div>
 
-      <style>{`@media(max-width:900px){footer div[style*="grid-template-columns: 2fr"]{grid-template-columns:1fr 1fr!important}}`}</style>
+      <style>{`
+        @media(max-width:900px){footer div[style*="grid-template-columns: 2fr"]{grid-template-columns:1fr 1fr!important}}
+        @media(max-width:600px){footer div[style*="grid-template-columns: 2fr"]{grid-template-columns:1fr!important}}
+      `}</style>
     </footer>
   );
 }
