@@ -3,7 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Zap, Check, CreditCard, Landmark, ArrowRight, MessageCircle, Mail, ShieldCheck, Loader2, Upload, X, Globe } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthContext";
-import { doc, updateDoc, serverTimestamp, query, collection, where, getDocs } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, query, collection, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 
@@ -99,13 +99,13 @@ function CheckoutContent() {
     setSubmitting(true);
     try {
       if (user) {
-        await updateDoc(doc(db, "users", user.uid), {
+        await setDoc(doc(db, "users", user.uid), {
           paymentStatus: "pending_approval",
           paymentMethod: method,
           plan: selectedPlanId,
-          proofUrl: preview, 
+          proofUrl: preview,
           submittedAt: serverTimestamp()
-        });
+        }, { merge: true });
         alert("Payment screenshot submitted! Your dashboard will be activated once verified.");
         router.push("/dashboard"); 
       } else {
