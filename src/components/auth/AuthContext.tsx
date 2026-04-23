@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, User, signOut, signInWithPopup } from "firebase/auth";
+import { onAuthStateChanged, User, signOut, signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider, db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 
@@ -20,6 +20,68 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Super Admin Emails - Hardcoded for MVP, can be moved to env or DB later
 const SUPER_ADMIN_EMAILS = ["abhi.kush047@gmail.com"];
 
+// Detect mobile/tablet where popups are blocked
+const isMobileDevice = () => {
+  if (typeof window === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+    || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+};
+
+// Setup user doc in Firestore after login (shared between popup and redirect)
+const setupUserDoc = async (
+  user: User, 
+  requestedPlan: string | undefined,
+  setRole: (r: any) => void,
+  setPlan: (p: any) => void,
+  setPaymentStatus: (s: any) => void,
+  setProofUrl: (u: string | null) => void
+) => {
+  try {
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) {
+      const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(user.email || "");
+      const newRole = isSuperAdmin ? "admin" : "owner";
+      const newPlan = isSuperAdmin ? "enterprise" : (requestedPlan || "starter");
+
+      await setDoc(userDocRef, {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        role: newRole,
+        plan: newPlan,
+        paymentStatus: "unpaid",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      setRole(newRole);
+      setPlan(newPlan);
+      setPaymentStatus("unpaid");
+    } else {
+      const existingData = userDoc.data();
+      if (requestedPlan && existingData.plan !== requestedPlan) {
+        await updateDoc(userDocRef, {
+          plan: requestedPlan,
+          updatedAt: serverTimestamp()
+        });
+        setPlan(requestedPlan);
+      } else {
+        setRole(existingData.role);
+        setPlan(existingData.plan || "starter");
+        setPaymentStatus(existingData.paymentStatus || "unpaid");
+        setProofUrl(existingData.proofUrl || null);
+      }
+    }
+  } catch (err) {
+    console.error("Firestore Setup Error:", err);
+    setRole("owner");
+    setPlan("starter");
+    setPaymentStatus("unpaid");
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<"admin" | "owner" | "customer" | null>(null);
@@ -27,6 +89,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [paymentStatus, setPaymentStatus] = useState<"verified" | "pending_approval" | "unpaid" | null>(null);
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Handle redirect result (for mobile login)
+  useEffect(() => {
+    getRedirectResult(auth).then(async (result) => {
+      if (result?.user) {
+        // Recover the requested plan from sessionStorage
+        const pendingPlan = sessionStorage.getItem("gh_pending_plan") || undefined;
+        sessionStorage.removeItem("gh_pending_plan");
+        await setupUserDoc(result.user, pendingPlan, setRole, setPlan, setPaymentStatus, setProofUrl);
+      }
+    }).catch((err) => {
+      console.error("Redirect login error:", err);
+    });
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -71,53 +147,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGoogle = async (requestedPlan?: string) => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-
-      try {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
-          const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(user.email || "");
-          const newRole = isSuperAdmin ? "admin" : "owner";
-          const newPlan = isSuperAdmin ? "enterprise" : (requestedPlan || "starter");
-          
-          await setDoc(userDocRef, {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            role: newRole,
-            plan: newPlan,
-            paymentStatus: "unpaid",
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-          setRole(newRole);
-          setPlan(newPlan as any);
-          setPaymentStatus("unpaid");
-        } else {
-          const existingData = userDoc.data();
-          if (requestedPlan && existingData.plan !== requestedPlan) {
-            await updateDoc(userDocRef, { 
-              plan: requestedPlan,
-              updatedAt: serverTimestamp()
-            });
-            setPlan(requestedPlan as any);
-          } else {
-            setRole(existingData.role as any);
-            setPlan(existingData.plan || "starter");
-            setPaymentStatus(existingData.paymentStatus || "unpaid");
-            setProofUrl(existingData.proofUrl || null);
-          }
+      if (isMobileDevice()) {
+        // Mobile: use redirect (popups are blocked on iOS Safari, mobile Chrome, etc.)
+        if (requestedPlan) {
+          sessionStorage.setItem("gh_pending_plan", requestedPlan);
         }
-      } catch (err) {
-        console.error("Firestore Setup Error:", err);
-        setRole("owner");
-        setPlan("starter");
-        setPaymentStatus("unpaid");
+        await signInWithRedirect(auth, googleProvider);
+        // Page will redirect away, so nothing runs after this
+        return;
       }
+
+      // Desktop: use popup (faster UX)
+      const result = await signInWithPopup(auth, googleProvider);
+      await setupUserDoc(result.user, requestedPlan, setRole, setPlan, setPaymentStatus, setProofUrl);
     } catch (error: any) {
       if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") {
         console.warn("User closed or cancelled the login popup.");
