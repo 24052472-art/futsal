@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Legend } from "recharts";
 import { Trash2, RefreshCcw, AlertTriangle, CheckCircle2, IndianRupee, Lock, Crown } from "lucide-react";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/components/auth/AuthContext";
 import Link from "next/link";
@@ -15,7 +15,7 @@ const heatColor = (v: number) => {
 };
 
 export default function AnalyticsPage() {
-  const { plan } = useAuth();
+  const { plan, user } = useAuth();
   const [range, setRange] = useState("7d");
   const [loading, setLoading] = useState(true);
   const [resetState, setResetState] = useState<"idle" | "confirm" | "resetting" | "success">("idle");
@@ -33,9 +33,14 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     async function fetchAnalytics() {
+      if (!user) return;
       setLoading(true);
       try {
-        const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
+        const q = query(
+          collection(db, "bookings"), 
+          where("ownerId", "==", user.uid),
+          orderBy("createdAt", "desc")
+        );
         const snap = await getDocs(q);
         const bookings = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
 
@@ -48,8 +53,9 @@ export default function AnalyticsPage() {
         }
 
         // 1. Basic Stats
-        const totalRev = bookings.reduce((acc, b) => acc + (b.amount || 0), 0);
-        const totalBk = bookings.length;
+        const validBookings = bookings.filter(b => b.status === "confirmed" || b.status === "verified");
+        const totalRev = validBookings.reduce((acc, b) => acc + (Number(b.amount) || 0), 0);
+        const totalBk = validBookings.length;
         
         // 2. Repeat Rate Calculation
         const customerBookings: Record<string, number> = {};
@@ -71,10 +77,12 @@ export default function AnalyticsPage() {
         // 3. Monthly Revenue (Last 6 months)
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const monthlyMap: Record<string, number> = {};
-        bookings.forEach(b => {
-          const date = b.createdAt ? new Date(b.createdAt) : new Date(b.date);
+        validBookings.forEach(b => {
+          const date = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.date || Date.now());
           const m = months[date.getMonth()];
-          monthlyMap[m] = (monthlyMap[m] || 0) + (b.amount || 0);
+          if (m) {
+            monthlyMap[m] = (monthlyMap[m] || 0) + (Number(b.amount) || 0);
+          }
         });
         setMonthlyData(Object.entries(monthlyMap).map(([month, revenue]) => ({ month, revenue })));
 
@@ -98,7 +106,8 @@ export default function AnalyticsPage() {
           days.forEach(day => {
             // Count bookings in this slot and day
             row[day] = bookings.filter(b => {
-              const bDate = b.createdAt ? new Date(b.createdAt) : new Date(b.date);
+              const bDate = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.date || Date.now());
+              if (isNaN(bDate.getTime())) return false;
               const bDay = days[(bDate.getDay() + 6) % 7]; // Convert 0=Sun to 6=Sun
               return bDay === day && b.time?.includes(slot.split(" ")[0]);
             }).length;
@@ -114,7 +123,7 @@ export default function AnalyticsPage() {
       }
     }
     fetchAnalytics();
-  }, []);
+  }, [user]);
 
   const handleReset = async () => {
     setResetState("resetting");

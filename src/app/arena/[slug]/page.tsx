@@ -138,6 +138,25 @@ export default function ArenaPage({ params: paramsPromise }: { params: Promise<{
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+
+      // Send email notification to owner
+      try {
+        await fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ownerEmail: ownerData?.email || ownerData?.customerEmail || "owner@example.com",
+            customerName: form.name,
+            date: dates[selectedDate].toISOString(),
+            time: selectedSlot.time,
+            amount: finalPrice,
+            sportName: selectedSport.name
+          })
+        });
+      } catch (emailErr) {
+        console.error("Failed to send email notification", emailErr);
+      }
+
       setConfirmed(true);
     } catch (err) {
       console.error("Booking Error:", err);

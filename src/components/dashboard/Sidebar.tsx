@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   Zap, LayoutDashboard, Calendar, BookOpen, Clock,
@@ -31,11 +31,13 @@ export default function DashboardSidebar() {
   const [categoryCount, setCategoryCount] = useState(0);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "categories"), (snap) => {
+    if (!user) return;
+    const q = query(collection(db, "categories"), where("ownerId", "==", user.uid));
+    const unsubscribe = onSnapshot(q, (snap) => {
       setCategoryCount(snap.size);
     });
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();

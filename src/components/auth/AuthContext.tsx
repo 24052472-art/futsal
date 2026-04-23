@@ -119,8 +119,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setPaymentStatus("unpaid");
       }
     } catch (error: any) {
-      if (error.code === "auth/popup-closed-by-user") {
-        console.warn("User closed the login popup before completion.");
+      if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") {
+        console.warn("User closed or cancelled the login popup.");
         return; 
       }
       console.error("Google Login Error:", error);

@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { Plus, Edit3, Trash2, Crown, X, Clock, Check, Save } from "lucide-react";
-import { collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, updateDoc, arrayUnion, arrayRemove, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, where, updateDoc, arrayUnion, arrayRemove, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/components/auth/AuthContext";
 import Link from "next/link";
@@ -19,7 +19,12 @@ export default function SlotsPage() {
   const isOverLimit = categories.length >= limit;
 
   useEffect(() => {
-    const q = query(collection(db, "categories"), orderBy("createdAt", "desc"));
+    if (!user) return;
+    const q = query(
+      collection(db, "categories"),
+      where("ownerId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
     const unsubscribe = onSnapshot(q, (snap) => {
       const cats = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setCategories(cats);
@@ -31,7 +36,7 @@ export default function SlotsPage() {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [selectedCat]);
+  }, [selectedCat, user]);
 
   const addCategory = async () => {
     if (isOverLimit || !user) return;
