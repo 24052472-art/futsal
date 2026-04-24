@@ -17,22 +17,20 @@ function RegisterContent() {
   const { loginWithGoogle, user } = useAuth();
   const [role, setRole] = useState<"owner" | "customer">("owner");
   const [selectedPlan, setSelectedPlan] = useState(searchParams.get("plan") || "pro");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(false);
 
-  // Redirect handled by AuthContext post-login flow
-  /*
-  useEffect(() => {
-    if (user) {
-      router.push("/dashboard");
-    }
-  }, [user, router]);
-  */
+  const getPrice = (basePrice: number) => {
+    if (billingCycle === "monthly") return basePrice;
+    return Math.floor(basePrice * 12 * 0.8); // 20% discount for yearly
+  };
 
   const handleGoogleRegister = async () => {
     setLoading(true);
     try {
-      await loginWithGoogle(selectedPlan);
-      router.push(`/checkout?plan=${selectedPlan}`);
+      const planString = `${selectedPlan}_${billingCycle}`;
+      await loginWithGoogle(planString);
+      router.push(`/checkout?plan=${selectedPlan}&cycle=${billingCycle}`);
     } catch (err) {
       console.error(err);
       setLoading(false);
@@ -55,23 +53,39 @@ function RegisterContent() {
 
         <div className="glass" style={{ padding: 32, borderRadius: 24, border: "1px solid rgba(255,255,255,0.05)" }}>
           <div style={{ display: "flex", background: "rgba(15, 23, 42, 0.6)", padding: 4, borderRadius: 12, marginBottom: 24 }}>
-            <button onClick={() => setRole("owner")} style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: role === "owner" ? "#00d4ff" : "transparent", color: role === "owner" ? "#020617" : "white", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <button onClick={() => setRole("owner")} style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: role === "owner" ? "#00d4ff" : "transparent", color: role === "owner" ? "#020617" : "white", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "0.2s" }}>
               <Shield size={16} /> Arena Owner
             </button>
-            <button onClick={() => setRole("customer")} style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: role === "customer" ? "#00d4ff" : "transparent", color: role === "customer" ? "#020617" : "white", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <button onClick={() => setRole("customer")} style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: role === "customer" ? "#00d4ff" : "transparent", color: role === "customer" ? "#020617" : "white", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "0.2s" }}>
               <UserCircle size={16} /> Customer
             </button>
           </div>
 
           {role === "owner" && (
             <div style={{ animation: "fadeIn 0.3s ease" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#94a3b8", textAlign: "center", marginBottom: 20, textTransform: "uppercase", letterSpacing: "1px" }}>Select Business Plan</div>
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginBottom: 24 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: billingCycle === "monthly" ? "white" : "#64748b" }}>Monthly</span>
+                <button 
+                  onClick={() => setBillingCycle(prev => prev === "monthly" ? "yearly" : "monthly")}
+                  style={{ width: 44, height: 22, borderRadius: 100, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.1)", position: "relative", cursor: "pointer", padding: 2 }}
+                >
+                  <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#00ff88", position: "absolute", top: 2, left: billingCycle === "monthly" ? 2 : 24, transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)" }} />
+                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: billingCycle === "yearly" ? "white" : "#64748b" }}>Yearly</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, background: "rgba(0,255,136,0.1)", color: "#00ff88", padding: "2px 8px", borderRadius: 100, border: "1px solid rgba(0,255,136,0.2)" }}>Save 20%</span>
+                </div>
+              </div>
+
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
                 {plans.map(p => (
                   <div key={p.id} onClick={() => setSelectedPlan(p.id)} style={{ padding: "16px 20px", borderRadius: 16, border: `2px solid ${selectedPlan === p.id ? "#00d4ff" : "rgba(255,255,255,0.05)"}`, background: selectedPlan === p.id ? "rgba(0,212,255,0.08)" : "rgba(15,23,42,0.4)", cursor: "pointer", transition: "all 0.2s" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                       <div style={{ fontWeight: 800, fontSize: 16 }}>{p.name} {p.badge && <span style={{ fontSize: 9, background: "#00ff88", color: "#020617", padding: "2px 6px", borderRadius: 100, marginLeft: 6, verticalAlign: "middle" }}>{p.badge}</span>}</div>
-                      <div style={{ fontWeight: 800, color: "white", fontSize: 16 }}>₹{p.price}</div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontWeight: 900, color: "white", fontSize: 18 }}>₹{getPrice(p.price).toLocaleString()}</div>
+                        <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700 }}>per {billingCycle === "monthly" ? "month" : "year"}</div>
+                      </div>
                     </div>
                     <div style={{ fontSize: 12, color: "#94a3b8" }}>{p.desc}</div>
                     {selectedPlan === p.id && <div style={{ fontSize: 11, color: "#00d4ff", marginTop: 8, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}><Check size={12} /> Selected</div>}
