@@ -100,11 +100,14 @@ function CheckoutContent() {
     try {
       if (user) {
         await setDoc(doc(db, "users", user.uid), {
+          displayName: user.displayName || "Partner",
+          email: user.email,
           paymentStatus: "pending_approval",
           paymentMethod: method,
           plan: selectedPlanId,
           proofUrl: preview,
-          submittedAt: serverTimestamp()
+          submittedAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         }, { merge: true });
         alert("Payment screenshot submitted! Your dashboard will be activated once verified.");
         router.push("/dashboard"); 
