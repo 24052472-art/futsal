@@ -14,6 +14,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (!loading && !user) {
+      // Save the intended destination so we can redirect back after login
+      localStorage.setItem("gh_redirect_after_login", window.location.pathname);
       router.push("/login");
     }
     if (!loading && user && role === "customer") {
