@@ -121,12 +121,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user && !loading) {
         const path = window.location.pathname;
         if (path === "/login" || path === "/register") {
-          const redirectPath = sessionStorage.getItem("gh_redirect_after_login") || "/dashboard";
+          const isAdmin = SUPER_ADMIN_EMAILS.includes(user.email || "");
+          const defaultPath = isAdmin ? "/dashboard/customers" : "/dashboard";
+          const redirectPath = localStorage.getItem("gh_redirect_after_login") || defaultPath;
           console.log("Stuck session detected, forcing redirect to:", redirectPath);
           window.location.href = redirectPath;
         }
       }
-    }, 2000); // Check every 2 seconds
+    }, 1500); // Check even faster
     return () => clearInterval(checkSession);
   }, [user, loading]);
 
@@ -135,44 +137,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         setUser(user);
         
-        // Handle post-login redirect immediately if on login/register
+        // 1. INITIALIZE FROM CACHE (to prevent flashing)
+        const cachedRole = localStorage.getItem(`gh_role_${user.uid}`) as any;
+        const cachedPlan = localStorage.getItem(`gh_plan_${user.uid}`) as any;
+        const cachedStatus = localStorage.getItem(`gh_status_${user.uid}`) as any;
+
+        const isAdmin = SUPER_ADMIN_EMAILS.includes(user.email || "");
+        setRole(cachedRole || (isAdmin ? "admin" : "owner"));
+        setPlan(cachedPlan || (isAdmin ? "enterprise" : "starter"));
+        setPaymentStatus(cachedStatus || (isAdmin ? "verified" : "unpaid"));
+        
+        setLoading(false);
+
+        // 2. Handle post-login redirect
         const path = window.location.pathname;
         if (path === "/login" || path === "/register") {
-          const isAdmin = SUPER_ADMIN_EMAILS.includes(user.email || "");
           const defaultPath = isAdmin ? "/dashboard/customers" : "/dashboard";
-          const redirectPath = sessionStorage.getItem("gh_redirect_after_login") || defaultPath;
+          const redirectPath = localStorage.getItem("gh_redirect_after_login") || defaultPath;
+          localStorage.removeItem("gh_redirect_after_login");
+          localStorage.removeItem("gh_pending_plan");
           window.location.href = redirectPath;
         }
 
-        if (SUPER_ADMIN_EMAILS.includes(user.email || "")) {
-          setRole("admin");
-          setPlan("enterprise"); 
-          setPaymentStatus("verified");
-        } else {
-          try {
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (userDoc.exists()) {
-              const data = userDoc.data();
-              setRole(data.role as any);
-              setPlan(data.plan || "starter");
-              setPaymentStatus(data.paymentStatus || "unpaid");
-              setProofUrl(data.proofUrl || null);
-            } else {
-              setRole("owner");
-              setPlan("starter");
-              setPaymentStatus("unpaid");
-            }
-          } catch (err) {
-            console.error("Firestore Error:", err);
+        // 3. Background Sync (Silent update + Cache update)
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            setRole(data.role as any);
+            setPlan(data.plan || "starter");
+            setPaymentStatus(data.paymentStatus || "unpaid");
+            setProofUrl(data.proofUrl || null);
+
+            // Update cache
+            localStorage.setItem(`gh_role_${user.uid}`, data.role);
+            localStorage.setItem(`gh_plan_${user.uid}`, data.plan || "starter");
+            localStorage.setItem(`gh_status_${user.uid}`, data.paymentStatus || "unpaid");
           }
+        } catch (err) {
+          console.warn("Background sync failed:", err);
         }
       } else {
         setUser(null);
         setRole(null);
         setPlan(null);
         setPaymentStatus(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -183,20 +194,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Store intentions before trying login
     if (requestedPlan) {
-      sessionStorage.setItem("gh_pending_plan", requestedPlan);
-      sessionStorage.setItem("gh_redirect_after_login", `/checkout?plan=${requestedPlan}`);
+      localStorage.setItem("gh_pending_plan", requestedPlan);
+      localStorage.setItem("gh_redirect_after_login", `/checkout?plan=${requestedPlan}`);
     }
 
     try {
       // Try Popup first (Safari/iOS works better with popups triggered by clicks)
       const result = await signInWithPopup(auth, googleProvider);
       if (result.user) {
-        const pendingPlan = sessionStorage.getItem("gh_pending_plan") || undefined;
-        sessionStorage.removeItem("gh_pending_plan");
+        const pendingPlan = localStorage.getItem("gh_pending_plan") || undefined;
+        localStorage.removeItem("gh_pending_plan");
         await setupUserDoc(result.user, pendingPlan, setRole, setPlan, setPaymentStatus, setProofUrl);
         
-        const redirectPath = sessionStorage.getItem("gh_redirect_after_login") || "/dashboard";
-        sessionStorage.removeItem("gh_redirect_after_login");
+        const redirectPath = localStorage.getItem("gh_redirect_after_login") || "/dashboard";
+        localStorage.removeItem("gh_redirect_after_login");
         window.location.href = redirectPath;
       }
     } catch (error: any) {

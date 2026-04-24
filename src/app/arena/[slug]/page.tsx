@@ -217,7 +217,9 @@ export default function ArenaPage({ params: paramsPromise }: { params: Promise<{
                   <span className="venue-badge">Premier Partner</span>
                   <div className="venue-rating"><Star size={12} fill="#f59e0b" color="#f59e0b" /> 4.9 (240 reviews)</div>
                </div>
-               <h1 className="venue-name">{slug.replace(/-/g, " ").toUpperCase()}</h1>
+               <h1 className="venue-name" style={{ overflowWrap: "break-word", wordBreak: "break-word", fontSize: (ownerData?.arenaName || ownerData?.displayName || slug).length > 20 ? 24 : 36 }}>
+                  {ownerData?.arenaName || ownerData?.displayName || slug.replace(/-/g, " ").toUpperCase()}
+               </h1>
                <p className="venue-desc">{ownerData?.description || "World-class facility with professional turf, night lighting, and premium amenities."}</p>
                <div className="venue-footer">
                   <div className="footer-item"><MapPin size={14} /> {ownerData?.address || "Location Specified"}</div>

@@ -38,9 +38,12 @@ export default function CustomersPage() {
 
         setDataList(users);
       } else {
-        const q = query(collection(db, "bookings"), where("ownerId", "==", currentUser?.uid || ""), orderBy("createdAt", "desc"));
+        const q = query(collection(db, "bookings"), where("ownerId", "==", currentUser?.uid || ""));
         const snap = await getDocs(q);
-        setDataList(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Sort locally to avoid index errors
+        list.sort((a: any, b: any) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+        setDataList(list);
       }
     } catch (err) { 
       console.error("Fetch Error:", err); 
