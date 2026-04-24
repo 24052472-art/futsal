@@ -107,13 +107,52 @@ export default function ArenaPage({ params: paramsPromise }: { params: Promise<{
     return d;
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.6)); // Compress to 60% quality for safety
+        };
+      };
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (selected) {
+      if (selected.size > 10 * 1024 * 1024) {
+        alert("File is too large. Please select an image under 10MB.");
+        return;
+      }
       setFile(selected);
-      const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result as string);
-      reader.readAsDataURL(selected);
+      try {
+        const compressed = await compressImage(selected);
+        setPreview(compressed);
+      } catch (err) {
+        console.error("Compression Error:", err);
+        // Fallback to original if compression fails (though rare)
+        const reader = new FileReader();
+        reader.onloadend = () => setPreview(reader.result as string);
+        reader.readAsDataURL(selected);
+      }
     }
   };
 
