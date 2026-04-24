@@ -100,7 +100,7 @@ export default function AnalyticsPage() {
         })));
 
         // 5. Heatmap (Static slots for now, dynamic values)
-        const slots = ["6â€“7 AM", "7â€“8 AM", "8â€“9 AM", "5â€“6 PM", "6â€“7 PM", "7â€“8 PM", "8â€“9 PM"];
+        const slots = ["6—“7 AM", "7—“8 AM", "8—“9 AM", "5—“6 PM", "6—“7 PM", "7—“8 PM", "8—“9 PM"];
         const hData = slots.map(slot => {
           const row: any = { slot };
           days.forEach(day => {
@@ -170,9 +170,9 @@ export default function AnalyticsPage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 24 }}>
         {[
-          { label: "Total Revenue", value: `â‚¹${stats.totalRevenue.toLocaleString()}`, sub: "Overall Earnings", color: "#00ff88" },
+          { label: "Total Revenue", value: `₹${stats.totalRevenue.toLocaleString()}`, sub: "Overall Earnings", color: "#00ff88" },
           { label: "Total Bookings", value: stats.totalBookings.toString(), sub: "Confirmed slots", color: "#00d4ff" },
-          { label: "Avg. per Booking", value: `â‚¹${Math.round(stats.avgBooking).toLocaleString()}`, sub: "Slot efficiency", color: "#f59e0b" },
+          { label: "Avg. per Booking", value: `₹${Math.round(stats.avgBooking).toLocaleString()}`, sub: "Slot efficiency", color: "#f59e0b" },
           { label: "Repeat Customers", value: `${Math.round(stats.repeatRate)}%`, sub: "Loyalty rate", color: "#ec4899" },
         ].map(k => (
           <div key={k.label} className="glass" style={{ borderRadius: 16, padding: 22 }}>
@@ -196,8 +196,8 @@ export default function AnalyticsPage() {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" />
               <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 12 }} />
-              <YAxis stroke="#64748b" tick={{ fontSize: 12 }} tickFormatter={v => `â‚¹${v / 1000}k`} />
-              <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: 10 }} formatter={(v: any) => [`â‚¹${Number(v).toLocaleString()}`, "Revenue"]} />
+              <YAxis stroke="#64748b" tick={{ fontSize: 12 }} tickFormatter={v => `₹${v / 1000}k`} />
+              <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: 10 }} formatter={(v: any) => [`₹${Number(v).toLocaleString()}`, "Revenue"]} />
               <Bar dataKey="revenue" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

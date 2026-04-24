@@ -132,7 +132,7 @@ export default function SlotsPage() {
             <h2 style={{ fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 700 }}>Time Slots: {selectedCat.name}</h2>
             <div style={{ display: "flex", gap: 12 }}>
                <input type="text" placeholder="e.g. 6:00 AM - 7:00 AM" className="input-field" style={{ width: 220, padding: "8px 12px", fontSize: 13 }} value={newSlot.time} onChange={e => setNewSlot({...newSlot, time: e.target.value})} />
-               <input type="number" placeholder="Price (â‚¹)" className="input-field" style={{ width: 100, padding: "8px 12px", fontSize: 13 }} value={newSlot.price} onChange={e => setNewSlot({...newSlot, price: e.target.value})} />
+               <input type="number" placeholder="Price (₹)" className="input-field" style={{ width: 100, padding: "8px 12px", fontSize: 13 }} value={newSlot.price} onChange={e => setNewSlot({...newSlot, price: e.target.value})} />
                <button onClick={addSlot} className="btn-primary" style={{ padding: "8px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
                  <Plus size={14} /> Add Slot
                </button>
@@ -158,7 +158,7 @@ export default function SlotsPage() {
                    selectedCat.slots.map((slot: any) => (
                      <tr key={slot.id} style={{ borderBottom: "1px solid var(--border)" }}>
                        <td style={{ padding: "16px 24px", fontSize: 14, fontWeight: 600 }}>{slot.time}</td>
-                       <td style={{ padding: "16px 24px", fontSize: 14, color: "#00ff88", fontWeight: 700 }}>â‚¹{slot.price}</td>
+                       <td style={{ padding: "16px 24px", fontSize: 14, color: "#00ff88", fontWeight: 700 }}>₹{slot.price}</td>
                        <td style={{ padding: "16px 24px" }}><span style={{ padding: "4px 10px", borderRadius: 100, background: "rgba(16,185,129,0.1)", color: "#00ff88", fontSize: 11, fontWeight: 700 }}>Available</span></td>
                        <td style={{ padding: "16px 24px", textAlign: "right" }}>
                          <button onClick={() => removeSlot(slot)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: 4 }}><Trash2 size={16} /></button>

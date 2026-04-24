@@ -142,7 +142,7 @@ const ArenaOverview = ({ user }: { user: any }) => {
   }, [user]);
 
   const statsCards = [
-    { label: "Today's Revenue", value: `â‚¹${summary.todayRevenue.toLocaleString()}`, change: "+12%", icon: <IndianRupee size={22} />, color: "#00ff88", bg: "rgba(16,185,129,0.1)" },
+    { label: "Today's Revenue", value: `₹${summary.todayRevenue.toLocaleString()}`, change: "+12%", icon: <IndianRupee size={22} />, color: "#00ff88", bg: "rgba(16,185,129,0.1)" },
     { label: "Total Bookings", value: summary.totalBookings.toString(), change: "+8%", icon: <Calendar size={22} />, color: "#00d4ff", bg: "rgba(0,212,255,0.1)" },
     { label: "Occupancy Rate", value: `${summary.occupancy}%`, change: "+5%", icon: <TrendingUp size={22} />, color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
     { label: "Active Customers", value: summary.activeCustomers.toString(), change: "+23%", icon: <Users size={22} />, color: "#ec4899", bg: "rgba(236,72,153,0.1)" },
@@ -217,10 +217,10 @@ const ArenaOverview = ({ user }: { user: any }) => {
                    <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(0,212,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#00d4ff" }}>{ (b.customerName || "?")[0] }</div>
                    <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 700 }}>{b.customerName || "Walk-in"}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{b.sportName} â€¢ {b.time}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{b.sportName} • {b.time}</div>
                    </div>
                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 14, fontWeight: 900, color: "#00ff88" }}>â‚¹{b.amount}</div>
+                      <div style={{ fontSize: 14, fontWeight: 900, color: "#00ff88" }}>₹{b.amount}</div>
                       <div style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>{b.status}</div>
                    </div>
                 </div>

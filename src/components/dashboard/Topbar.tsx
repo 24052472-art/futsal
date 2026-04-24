@@ -1,5 +1,5 @@
 "use client";
-import { Bell, Search, ExternalLink, Calendar, ShieldCheck, Crown, Menu } from "lucide-react";
+import { Bell, Search, ExternalLink, Calendar, ShieldCheck, Crown, Menu, Share2, Check } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useState, useEffect } from "react";
@@ -9,7 +9,15 @@ import { db } from "@/lib/firebase";
 export default function DashboardTopbar({ onMenuClick }: { onMenuClick: () => void }) {
   const { user, role, plan, paymentStatus } = useAuth();
   const [showPlan, setShowPlan] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [arenaSlug, setArenaSlug] = useState("");
+
+  const copyShareLink = () => {
+    const url = `${window.location.origin}/arena/${arenaSlug}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -51,12 +59,19 @@ export default function DashboardTopbar({ onMenuClick }: { onMenuClick: () => vo
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <Link href={`/arena/${arenaSlug}`} target="_blank" className="hide-mobile" style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text-secondary)", textDecoration: "none", fontSize: 13, fontWeight: 500, transition: "all 0.2s" }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "#00d4ff"; (e.currentTarget as HTMLElement).style.color = "#00d4ff"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}>
-          <ExternalLink size={13} /> <span className="hide-tablet">View Arena Page</span>
-        </Link>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }} className="hide-mobile">
+           <Link href={`/arena/${arenaSlug}`} target="_blank" style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text-secondary)", textDecoration: "none", fontSize: 12, fontWeight: 700, transition: "all 0.2s" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "#00d4ff"; (e.currentTarget as HTMLElement).style.color = "#00d4ff"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}>
+            <ExternalLink size={13} /> <span className="hide-tablet">View Public Page</span>
+          </Link>
+          
+          <button onClick={copyShareLink} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: copied ? "1px solid #10b981" : "1px solid var(--border)", color: copied ? "#10b981" : "var(--text-secondary)", background: "transparent", fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>
+            {copied ? <Check size={13} /> : <Share2 size={13} />} 
+            <span className="hide-tablet">{copied ? "Copied!" : "Share Link"}</span>
+          </button>
+        </div>
 
         <button style={{ position: "relative", width: 38, height: 38, borderRadius: 10, border: "1px solid var(--border)", background: "rgba(30,41,59,0.6)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
           <Bell size={17} />

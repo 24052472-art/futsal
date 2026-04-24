@@ -163,14 +163,14 @@ export default function BookingsPage() {
                               <div style={{ fontSize: 12, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 4 }}><Mail size={10} /> {b.customerEmail || b.email || "N/A"}</div>
                            </td>
                            <td style={{ padding: "20px" }}>
-                              <span style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>{b.sportEmoji || "ðŸŸï¸"} {b.sportName || b.sport || "General"}</span>
+                              <span style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>{b.sportEmoji || "⚽"} {b.sportName || b.sport || "General"}</span>
                            </td>
                            <td style={{ padding: "20px" }}>
                               <div style={{ fontSize: 13, fontWeight: 700 }}>{b.date ? new Date(b.date).toLocaleDateString() : "N/A"}</div>
                               <div style={{ fontSize: 11, color: "#00d4ff", fontWeight: 700, marginTop: 2 }}>{b.time}</div>
                            </td>
                            <td style={{ padding: "20px" }}>
-                              <div style={{ fontSize: 15, fontWeight: 900, color: "#00ff88" }}>â‚¹{b.amount}</div>
+                              <div style={{ fontSize: 15, fontWeight: 900, color: "#00ff88" }}>₹{b.amount}</div>
                               <div style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>{b.paymentMethod || "Online"}</div>
                            </td>
                            <td style={{ padding: "20px" }}>
@@ -219,7 +219,7 @@ export default function BookingsPage() {
                   { icon: <Phone size={16} />, label: "Phone", value: selectedBooking.customerPhone || selectedBooking.phone },
                   { icon: <ImageIcon size={16} />, label: "Sport", value: selectedBooking.sportName || selectedBooking.sport },
                   { icon: <Clock size={16} />, label: "Timing", value: `${selectedBooking.time} on ${new Date(selectedBooking.date).toLocaleDateString()}` },
-                  { icon: <IndianRupee size={16} />, label: "Revenue", value: `â‚¹${selectedBooking.amount}` },
+                  { icon: <IndianRupee size={16} />, label: "Revenue", value: `₹${selectedBooking.amount}` },
                 ].map((item, i) => (
                   <div key={i} style={{ display: "flex", gap: 16 }}>
                      <div style={{ color: "#00d4ff", marginTop: 2 }}>{item.icon}</div>
@@ -251,7 +251,7 @@ export default function BookingsPage() {
                  </div>
                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                     <div className="input-group"><label>Sport</label><input required value={manualForm.sportName} onChange={e => setManualForm({...manualForm, sportName: e.target.value})} className="input-field" /></div>
-                    <div className="input-group"><label>Amount (â‚¹)</label><input required type="number" value={manualForm.amount} onChange={e => setManualForm({...manualForm, amount: e.target.value})} className="input-field" /></div>
+                    <div className="input-group"><label>Amount (₹)</label><input required type="number" value={manualForm.amount} onChange={e => setManualForm({...manualForm, amount: e.target.value})} className="input-field" /></div>
                  </div>
                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                     <div className="input-group"><label>Date</label><input type="date" required value={manualForm.date} onChange={e => setManualForm({...manualForm, date: e.target.value})} className="input-field" /></div>

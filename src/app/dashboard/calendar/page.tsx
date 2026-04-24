@@ -41,7 +41,7 @@ export default function CalendarPage() {
   const getWeekRangeStr = () => {
     const start = days[0].dateObj;
     const end = days[6].dateObj;
-    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} â€“ ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} —“ ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   };
 
   // Fetch Bookings
@@ -78,7 +78,7 @@ export default function CalendarPage() {
             if (!newEvents[key]) newEvents[key] = [];
             newEvents[key].push({
               id: doc.id,
-              label: `${b.customerName || "Walk-in"} â€¢ ${b.sportName || b.sport || "Arena"}`,
+              label: `${b.customerName || "Walk-in"} • ${b.sportName || b.sport || "Arena"}`,
               color: color,
               status: b.status,
               fullData: b
@@ -172,7 +172,7 @@ export default function CalendarPage() {
                           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                              {slotEvents.map(ev => (
                                <div key={ev.id} title={ev.label} style={{ background: ev.status === "confirmed" ? `${ev.color}15` : "rgba(245,158,11,0.1)", borderLeft: `3px solid ${ev.status === "confirmed" ? ev.color : "#f59e0b"}`, borderRadius: "4px 8px 8px 4px", padding: "8px 10px", fontSize: 11, fontWeight: 700, color: ev.status === "confirmed" ? ev.color : "#f59e0b", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "0.2s" }} className="hover:opacity-80">
-                                 {ev.status === "pending_verification" && <span style={{ fontSize: 10, marginRight: 4 }}>â³</span>}
+                                 {ev.status === "pending_verification" && <span style={{ fontSize: 10, marginRight: 4 }}>⏳</span>}
                                  {ev.label}
                                </div>
                              ))}

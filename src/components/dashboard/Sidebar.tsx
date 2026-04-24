@@ -8,8 +8,9 @@ import { db } from "@/lib/firebase";
 import {
   Zap, LayoutDashboard, Calendar, BookOpen, Clock,
   CreditCard, BarChart3, Tag, Users, Settings, ChevronRight,
-  LogOut, Crown, X, Menu, User, ShieldCheck, IndianRupee
+  LogOut, Crown, X, Menu, User, ShieldCheck, IndianRupee, ExternalLink, Share2, Check
 } from "lucide-react";
+import { doc, getDoc } from "firebase/firestore";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
@@ -29,6 +30,8 @@ export default function DashboardSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { user, logout, role, plan } = useAuth();
   const [categoryCount, setCategoryCount] = useState(0);
+  const [arenaSlug, setArenaSlug] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -36,6 +39,19 @@ export default function DashboardSidebar() {
     const unsubscribe = onSnapshot(q, (snap) => {
       setCategoryCount(snap.size);
     });
+
+    const fetchSlug = async () => {
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) {
+          setArenaSlug(snap.data().arenaSlug || user.uid);
+        } else {
+          setArenaSlug(user.uid);
+        }
+      } catch { setArenaSlug(user.uid); }
+    };
+    fetchSlug();
+
     return () => unsubscribe();
   }, [user]);
 
@@ -153,6 +169,29 @@ export default function DashboardSidebar() {
             </>
           )}
         </nav>
+
+        {/* Share Section (Mobile Optimized) */}
+        {!collapsed && role !== "admin" && (
+          <div style={{ margin: "0 8px 12px", padding: "16px", borderRadius: 12, background: "rgba(30,41,59,0.4)", border: "1px solid var(--border)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Share Booking Link</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+               <Link href={`/arena/${arenaSlug}`} target="_blank" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.03)", color: "white", textDecoration: "none", fontSize: 13, fontWeight: 600, border: "1px solid rgba(255,255,255,0.05)" }}>
+                 <ExternalLink size={14} /> View Page
+               </Link>
+               <button 
+                 onClick={() => {
+                   const url = `${window.location.origin}/arena/${arenaSlug}`;
+                   navigator.clipboard.writeText(url);
+                   setCopied(true);
+                   setTimeout(() => setCopied(false), 2000);
+                 }}
+                 style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 8, background: copied ? "rgba(16,185,129,0.1)" : "rgba(0,212,255,0.1)", color: copied ? "#10b981" : "#00d4ff", border: copied ? "1px solid rgba(16,185,129,0.2)" : "1px solid rgba(0,212,255,0.2)", cursor: "pointer", fontSize: 13, fontWeight: 600 }}
+               >
+                 {copied ? <Check size={14} /> : <Share2 size={14} />} {copied ? "Link Copied!" : "Copy Link"}
+               </button>
+            </div>
+          </div>
+        )}
 
         {/* Plan badge */}
         {!collapsed && role !== "admin" && (

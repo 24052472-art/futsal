@@ -93,11 +93,11 @@ export default function AdminPricingPage() {
               </div>
               <div>
                 <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{plan.name}</h3>
-                <div style={{ color: "var(--text-muted)", fontSize: 12 }}>{plan.features.slice(0, 3).join(" â€¢ ")}...</div>
+                <div style={{ color: "var(--text-muted)", fontSize: 12 }}>{plan.features.slice(0, 3).join(" • ")}...</div>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 18, fontWeight: 700 }}>â‚¹</span>
+              <span style={{ fontSize: 18, fontWeight: 700 }}>₹</span>
               <input type="number" className="input-field" style={{ width: 120, fontSize: 20, fontWeight: 800, textAlign: "center" }}
                 value={plan.price} onChange={e => updatePrice(plan.id, parseInt(e.target.value) || 0)} />
               <span style={{ color: "var(--text-muted)", fontSize: 14 }}>/month</span>

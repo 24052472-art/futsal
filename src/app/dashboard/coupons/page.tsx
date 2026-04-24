@@ -46,7 +46,7 @@ export default function CouponsPage() {
             <div>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: "var(--text-secondary)" }}>Discount Type</label>
               <select className="input-field" style={{ padding: "11px 14px" }} value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
-                <option value="flat">Flat (â‚¹)</option>
+                <option value="flat">Flat (₹)</option>
                 <option value="percent">Percent (%)</option>
               </select>
             </div>
@@ -78,7 +78,7 @@ export default function CouponsPage() {
 
             <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
               <div style={{ flex: 1, padding: "12px 16px", borderRadius: 10, background: "rgba(15,23,42,0.5)", textAlign: "center" }}>
-                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 22, fontWeight: 800, color: "#00ff88" }}>{c.type === "flat" ? `â‚¹${c.value}` : `${c.value}%`}</div>
+                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 22, fontWeight: 800, color: "#00ff88" }}>{c.type === "flat" ? `₹${c.value}` : `${c.value}%`}</div>
                 <div style={{ fontSize: 11, color: "var(--text-muted)" }}>discount</div>
               </div>
               <div style={{ flex: 1, padding: "12px 16px", borderRadius: 10, background: "rgba(15,23,42,0.5)", textAlign: "center" }}>
