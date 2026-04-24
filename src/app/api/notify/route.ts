@@ -62,6 +62,7 @@ export async function POST(req: Request) {
             </table>
 
           </div>
+          </div>
           
           <div style="background: #f8fafc; padding: 16px; text-align: center; color: #94a3b8; font-size: 12px;">
             This is an automated message from GHos. Please do not reply directly to this email.
