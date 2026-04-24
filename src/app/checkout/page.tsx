@@ -132,9 +132,7 @@ function CheckoutContent() {
       <div style={{ maxWidth: 1000, margin: "0 auto", position: "relative", zIndex: 1 }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 20, textDecoration: "none", color: "inherit" }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #00d4ff, #00ff88)", display: "flex", alignItems: "center", justifyContent: "center", color: "#020617", fontWeight: 900, fontSize: 18 }}>
-              GH
-            </div>
+            <img src="/logo.png" alt="Logo" style={{ width: 36, height: 36, borderRadius: 10, objectFit: "contain" }} />
             <span style={{ fontSize: 20, fontWeight: 900 }}>Game<span style={{ color: "#00ff88" }}>Haru</span></span>
           </Link>
           <h1 style={{ fontSize: "clamp(24px, 5vw, 40px)", fontWeight: 800, letterSpacing: "-1px" }}>

@@ -209,7 +209,7 @@ export default function ArenaPage({ params: paramsPromise }: { params: Promise<{
          <div className="brand-overlay" />
          <div className="brand-content">
             <div className="brand-logo">
-               <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, #00d4ff, #00ff88)", display: "flex", alignItems: "center", justifyContent: "center", color: "#020617", fontWeight: 900, fontSize: 14, fontFamily: "sans-serif", letterSpacing: "-0.5px" }}>GH</div>
+               <img src="/logo.png" alt="Logo" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "contain" }} />
                <span>GameHaru</span>
             </div>
             <div className="venue-card">

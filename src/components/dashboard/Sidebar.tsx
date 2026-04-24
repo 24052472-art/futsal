@@ -80,7 +80,7 @@ export default function DashboardSidebar() {
               <span style={{ fontFamily: "Outfit,sans-serif", fontWeight: 900, fontSize: 20, color: "white", letterSpacing: "-0.5px" }}>GH<span style={{ color: "#00ff88" }}>os</span></span>
             </Link>
           )}
-          {collapsed && <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg, #00d4ff, #00ff88)", display: "flex", alignItems: "center", justifyContent: "center", color: "#020617", fontWeight: 900, fontSize: 14, fontFamily: "sans-serif", letterSpacing: "-0.5px" }}>GH</div>}
+          {collapsed && <img src="/logo.png" alt="Logo" style={{ width: 34, height: 34, borderRadius: 10, objectFit: "contain" }} />}
           <button onClick={() => setCollapsed(!collapsed)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4, display: "flex" }}>
             {collapsed ? <Menu size={16} /> : <X size={16} />}
           </button>

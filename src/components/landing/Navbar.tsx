@@ -26,9 +26,7 @@ export default function Navbar() {
     }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 72 }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #00d4ff, #00ff88)", display: "flex", alignItems: "center", justifyContent: "center", color: "#020617", fontWeight: 900, fontSize: 18, fontFamily: "sans-serif", letterSpacing: "-1px" }}>
-            GH
-          </div>
+          <img src="/logo.png" alt="Logo" style={{ width: 36, height: 36, borderRadius: 10, objectFit: "contain" }} />
           <span style={{ fontFamily: "Outfit,sans-serif", fontWeight: 800, fontSize: 22, color: "white", letterSpacing: "-0.5px" }}>Game<span style={{ color: "#00ff88" }}>Haru</span></span>
         </Link>
 

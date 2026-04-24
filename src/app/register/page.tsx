@@ -42,9 +42,7 @@ function RegisterContent() {
       <div style={{ maxWidth: 480, width: "100%" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 24 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #00d4ff, #00ff88)", display: "flex", alignItems: "center", justifyContent: "center", color: "#020617", fontWeight: 900, fontSize: 20, fontFamily: "sans-serif", letterSpacing: "-1px" }}>
-              GH
-            </div>
+            <img src="/logo.png" alt="Logo" style={{ width: 44, height: 44, borderRadius: 12, objectFit: "contain" }} />
             <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: "-1px" }}>Game<span style={{ color: "#00ff88" }}>Haru</span></span>
           </div>
           <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 12 }}>Get Started</h1>

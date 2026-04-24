@@ -26,9 +26,7 @@ export default function Footer() {
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 48 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #00d4ff, #00ff88)", display: "flex", alignItems: "center", justifyContent: "center", color: "#020617", fontWeight: 900, fontSize: 18, fontFamily: "sans-serif", letterSpacing: "-1px" }}>
-                GH
-              </div>
+              <img src="/logo.png" alt="Logo" style={{ width: 36, height: 36, borderRadius: 10, objectFit: "contain" }} />
               <span style={{ fontFamily: "Outfit,sans-serif", fontWeight: 800, fontSize: 22, letterSpacing: "-0.5px" }}>Game<span style={{ color: "#00ff88" }}>Haru</span></span>
             </div>
             <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.7, maxWidth: 280 }}>

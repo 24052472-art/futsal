@@ -36,9 +36,7 @@ export default function LoginPage() {
       <div style={{ width: "100%", maxWidth: 420, position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 28 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #00d4ff, #00ff88)", display: "flex", alignItems: "center", justifyContent: "center", color: "#020617", fontWeight: 900, fontSize: 20, fontFamily: "sans-serif", letterSpacing: "-1px" }}>
-              GH
-            </div>
+            <img src="/logo.png" alt="Logo" style={{ width: 44, height: 44, borderRadius: 12, objectFit: "contain" }} />
             <span style={{ fontFamily: "Outfit,sans-serif", fontWeight: 900, fontSize: 26, color: "white", letterSpacing: "-0.5px" }}>GH<span style={{ color: "#00ff88" }}>os</span></span>
           </Link>
           <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: 32, fontWeight: 800, letterSpacing: "-1px", marginBottom: 8 }}>Welcome back</h1>
