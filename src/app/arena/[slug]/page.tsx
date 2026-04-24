@@ -126,9 +126,14 @@ export default function ArenaPage({ params: paramsPromise }: { params: Promise<{
     
     setBookingLoading(true);
     try {
+      const ownerId = selectedSport.ownerId || ownerData?.uid || "";
+      if (!ownerId) {
+        throw new Error("Missing owner identity. Please refresh the page.");
+      }
+
       await addDoc(collection(db, "bookings"), {
         arenaSlug: slug,
-        ownerId: selectedSport.ownerId || ownerData?.uid || "",
+        ownerId: ownerId,
         sportName: selectedSport.name,
         sportEmoji: selectedSport.emoji,
         date: dates[selectedDate].toISOString(),
@@ -165,9 +170,9 @@ export default function ArenaPage({ params: paramsPromise }: { params: Promise<{
       }
 
       setConfirmed(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Booking Error:", err);
-      alert("Failed to secure slot. Please try again.");
+      alert(`Failed to secure slot: ${err.message || "Please try again."}`);
     } finally {
       setBookingLoading(false);
     }
@@ -431,8 +436,8 @@ export default function ArenaPage({ params: paramsPromise }: { params: Promise<{
         .venue-footer { display: flex; flex-direction: column; gap: 8px; }
         .footer-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #64748b; }
         .social-links { display: flex; gap: 20px; color: #64748b; }
-        .interaction-side { display: flex; flex-direction: column; position: relative; height: 100vh; }
-        .step-progress { padding: 24px 64px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(10px); flex-shrink: 0; }
+        .interaction-side { display: flex; flex-direction: column; position: relative; height: 100vh; overflow: hidden; }
+        .step-progress { padding: 20px 48px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(10px); flex-shrink: 0; z-index: 50; }
         .step-item { display: flex; align-items: center; gap: 12px; position: relative; }
         .step-circle { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); display: flex; alignItems: center; justifyContent: center; fontSize: 12px; fontWeight: 800; color: #64748b; transition: 0.3s; }
         .step-label { font-size: 14px; font-weight: 700; color: #64748b; }
@@ -440,10 +445,20 @@ export default function ArenaPage({ params: paramsPromise }: { params: Promise<{
         .step-item.active .step-label { color: white; }
         .step-line { width: 60px; height: 2px; background: rgba(255,255,255,0.05); margin-left: 10px; }
         .step-item.active .step-line { background: #6366f1; }
-        .interaction-content { flex: 1; padding: 48px 64px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.3) transparent; }
+        .interaction-content { flex: 1; padding: 48px 64px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.3) transparent; -webkit-overflow-scrolling: touch; }
         .interaction-content::-webkit-scrollbar { width: 6px; }
         .interaction-content::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 10px; }
-        @media (max-width: 600px) { .step-progress { padding: 16px 24px; } .interaction-content { padding: 32px 24px; } .step-line { display: none; } }
+        @media (max-width: 600px) { 
+          .step-progress { padding: 16px 12px; } 
+          .interaction-content { padding: 24px 16px; } 
+          .step-line { width: 30px; }
+          .step-label { font-size: 11px; letter-spacing: -0.5px; }
+          .step-item { gap: 6px; }
+        }
+        @media (max-width: 400px) {
+          .step-label { display: none; }
+          .step-circle { width: 24px; height: 24px; font-size: 10px; }
+        }
         .step-heading { font-family: 'Outfit', sans-serif; font-size: 32px; font-weight: 900; margin-bottom: 32px; letter-spacing: -1px; }
         .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 48px; }
         .category-card { padding: 24px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; display: flex; align-items: center; gap: 20px; cursor: pointer; transition: 0.3s; position: relative; }
