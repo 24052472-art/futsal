@@ -138,7 +138,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Handle post-login redirect immediately if on login/register
         const path = window.location.pathname;
         if (path === "/login" || path === "/register") {
-          const redirectPath = sessionStorage.getItem("gh_redirect_after_login") || "/dashboard";
+          const isAdmin = SUPER_ADMIN_EMAILS.includes(user.email || "");
+          const defaultPath = isAdmin ? "/dashboard/customers" : "/dashboard";
+          const redirectPath = sessionStorage.getItem("gh_redirect_after_login") || defaultPath;
           window.location.href = redirectPath;
         }
 

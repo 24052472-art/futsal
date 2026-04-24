@@ -17,9 +17,26 @@ export default function CustomersPage() {
     setLoading(true);
     try {
       if (role === "admin") {
-        const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
+        // Fetch all users to ensure we don't miss anyone with missing timestamps
+        const q = query(collection(db, "users"));
         const snap = await getDocs(q);
-        setDataList(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // Sort: Pending Approval first, then newest by submittedAt or createdAt
+        users.sort((a: any, b: any) => {
+          // Rule 1: Pending Approval always comes first
+          const aPending = a.paymentStatus === "pending_approval";
+          const bPending = b.paymentStatus === "pending_approval";
+          if (aPending && !bPending) return -1;
+          if (!aPending && bPending) return 1;
+
+          // Rule 2: Newer submissions first
+          const aTime = a.submittedAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0;
+          const bTime = b.submittedAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0;
+          return bTime - aTime;
+        });
+
+        setDataList(users);
       } else {
         const q = query(collection(db, "bookings"), where("ownerId", "==", currentUser?.uid || ""), orderBy("createdAt", "desc"));
         const snap = await getDocs(q);
@@ -43,23 +60,60 @@ export default function CustomersPage() {
       return;
     }
     
+    // OPTIMISTIC UPDATE: Change UI immediately
+    const oldData = [...dataList];
+    if (action === "approve" || action === "decline") {
+      const newStatus = action === "approve" ? "verified" : "unpaid";
+      setDataList(prev => prev.map(u => u.id === userId ? { ...u, paymentStatus: newStatus } : u));
+    } else if (action === "delete") {
+      if (!confirm("Permanently delete this arena owner?")) return;
+      setDataList(prev => prev.filter(u => u.id !== userId));
+    }
+
     setProcessingId(userId);
     try {
       if (action === "delete") {
-        if (confirm("Permanently delete this arena owner and all associated data?")) {
-           await deleteDoc(doc(db, "users", userId));
-           setDataList(dataList.filter(u => u.id !== userId));
-        }
-      } else {
-        const newStatus = action === "approve" ? "verified" : "unpaid";
+        await deleteDoc(doc(db, "users", userId));
+      } else if (action === "approve") {
+        // Background DB update
         await updateDoc(doc(db, "users", userId), {
-          paymentStatus: newStatus,
+          paymentStatus: "verified",
           updatedAt: serverTimestamp()
         });
-        setDataList(dataList.map(u => u.id === userId ? { ...u, paymentStatus: newStatus } : u));
+
+        // Background Email notification
+        const approvedUser = oldData.find(u => u.id === userId);
+        if (approvedUser?.email) {
+          const planPriceMap: Record<string, number> = {
+            starter: 599,
+            pro: 1499,
+            enterprise: 4999
+          };
+          const planAmount = planPriceMap[approvedUser.plan?.toLowerCase()] || 0;
+
+          fetch("/api/notify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ownerEmail: approvedUser.email,
+              customerName: approvedUser.displayName || "Partner",
+              date: new Date().toISOString(),
+              time: new Date().toLocaleTimeString(),
+              amount: planAmount,
+              sportName: "Partner Approval"
+            })
+          }).catch(e => console.error("Email fail:", e));
+        }
+      } else {
+        await updateDoc(doc(db, "users", userId), {
+          paymentStatus: "unpaid",
+          updatedAt: serverTimestamp()
+        });
       }
     } catch (err) {
       console.error("Admin Action Error:", err);
+      setDataList(oldData);
+      alert("Action failed. Please check your connection.");
     } finally {
       setProcessingId(null);
     }
@@ -139,16 +193,33 @@ export default function CustomersPage() {
                 </div>
              </div>
 
-             {/* Info Fields */}
              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 32 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--text-secondary)", fontSize: 14 }}><Mail size={16} color="#00d4ff" /> {c.customerEmail || c.email}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--text-secondary)", fontSize: 14 }}><Phone size={16} color="#00d4ff" /> {c.customerPhone || c.phone || "No Phone"}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--text-secondary)", fontSize: 14 }}>
+                  <Mail size={16} color="#00d4ff" /> {c.customerEmail || c.email || "No Email Provided"}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--text-secondary)", fontSize: 14 }}>
+                  <Phone size={16} color="#00d4ff" /> {c.customerPhone || c.phone || "No Phone"}
+                </div>
+                
+                {c.paymentStatus === "verified" && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, color: "#10b981", fontSize: 14, fontWeight: 700 }}>
+                    <Calendar size={16} /> 
+                    {(() => {
+                      const start = c.updatedAt?.toMillis?.() || c.createdAt?.toMillis?.() || Date.now();
+                      const expiry = start + (30 * 24 * 60 * 60 * 1000); 
+                      const remaining = Math.ceil((expiry - Date.now()) / (1000 * 60 * 60 * 24));
+                      return remaining > 0 ? `${remaining} Days Remaining` : "Expired";
+                    })()}
+                  </div>
+                )}
+                
                 {role === "owner" && (
-                   <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--text-secondary)", fontSize: 14 }}><Clock size={16} color="#00d4ff" /> {c.time} â€¢ {new Date(c.date).toLocaleDateString()}</div>
+                   <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--text-secondary)", fontSize: 14 }}>
+                     <Clock size={16} color="#00d4ff" /> {c.time} • {c.date ? new Date(c.date).toLocaleDateString() : ""}
+                   </div>
                 )}
              </div>
 
-             {/* Receipt/Proof Preview */}
              {(c.receiptUrl || c.proofUrl) && (
                 <div style={{ marginBottom: 28 }}>
                    <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-muted)", marginBottom: 12, textTransform: "uppercase" }}>Payment Evidence</div>
