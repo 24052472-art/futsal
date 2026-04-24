@@ -61,9 +61,6 @@ export async function POST(req: Request) {
               </tr>
             </table>
 
-            <div style="margin-top: 32px; text-align: center;">
-              <a href="https://futsal-lime.vercel.app/dashboard/bookings" style="display: inline-block; background: #0f172a; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Verify Payment</a>
-            </div>
           </div>
           
           <div style="background: #f8fafc; padding: 16px; text-align: center; color: #94a3b8; font-size: 12px;">
